@@ -10,7 +10,8 @@ export async function middleware(req: NextRequest) {
     if (url.pathname === "/") {
       return NextResponse.next();
     } else if (url.pathname !== "/signin") {
-      return NextResponse.redirect(new URL("/signin", req.url));
+      // Use req.nextUrl instead of req.url to avoid Invalid URL error
+      return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
     }
   }
 
