@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/utils/prisma";
 
 async function getStatus() {
   let status = await prisma.status.findFirst();

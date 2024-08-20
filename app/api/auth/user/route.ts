@@ -1,9 +1,8 @@
 // app/api/user/route.ts
 
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-const prisma = new PrismaClient();
+import { prisma } from "@/utils/prisma";
 
 // POST request to create a user
 export async function POST(request: Request) {

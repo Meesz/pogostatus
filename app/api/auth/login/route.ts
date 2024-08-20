@@ -2,8 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { SignJWT } from "jose"; // Import SignJWT from jose
 import { NextRequest, NextResponse } from "next/server";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/utils/prisma";
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
