@@ -1,23 +1,33 @@
-// middleware.ts
-import { NextResponse, NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { jwtVerify } from "jose";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req });
-  const url = req.nextUrl.clone();
-
+  const token = req.cookies.get("token");
+  let decoded;
   if (!token) {
-    if (url.pathname === "/") {
-      return NextResponse.next();
-    } else if (url.pathname !== "/signin") {
-      // Use req.nextUrl instead of req.url to avoid Invalid URL error
-      return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
-    }
+    return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
   }
 
-  return NextResponse.next();
+  try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jwtVerify(token.value, secret);
+    decoded = payload;
+
+    return NextResponse.next();
+  } catch (err) {
+    // Clear the invalid token
+    const response = NextResponse.redirect(
+      new URL("/signin", req.nextUrl.origin)
+    );
+    response.cookies.delete("token"); // Ensure token is deleted
+    return response;
+  }
 }
 
 export const config = {
-  matcher: ["/"], // Protect all routes except for specific Next.js system routes
+  matcher: ["/"],
 };

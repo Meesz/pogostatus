@@ -1,11 +1,6 @@
-"use client";
-import { SessionProvider } from "next-auth/react";
+// app/page.tsx
 import StatusPage from "./statuspage/page";
 
 export default function Home() {
-  return (
-    <SessionProvider>
-      <StatusPage />
-    </SessionProvider>
-  );
+  return <StatusPage />;
 }

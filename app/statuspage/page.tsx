@@ -1,24 +1,16 @@
+// app/statuspage/page.tsx
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function StatusPage() {
   const [isInUse, setIsInUse] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { data: session, status } = useSession();
-  const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/signin");
-    } else if (status === "authenticated") {
-      fetchStatus();
-    }
-  }, [status, router]);
+    fetchStatus();
+  }, []);
 
   const fetchStatus = async () => {
     try {
@@ -49,12 +41,8 @@ export default function StatusPage() {
     }
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return <p className="text-lg sm:text-xl mb-6 text-center">Loading...</p>;
-  }
-
-  if (status === "unauthenticated") {
-    return null;
   }
 
   return (

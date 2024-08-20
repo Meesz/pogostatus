@@ -1,25 +1,25 @@
+// app/signin/page.tsx
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const handleSubmit = async (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const result = await signIn("credentials", {
-      password,
-      redirect: false,
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
     });
-    if (result?.error) {
-      console.error("Authentication error:", result.error);
-      alert(result.error);
-    } else if (result?.ok) {
+
+    if (response.ok) {
       router.push("/");
     } else {
-      alert("An unexpected error occurred");
+      alert("Verkeerd wachtwoord kerel");
     }
   };
 
