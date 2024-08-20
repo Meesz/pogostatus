@@ -3,17 +3,35 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+async function getStatus() {
+  let status = await prisma.status.findFirst();
+  if (!status) {
+    status = await prisma.status.create({
+      data: { isInUse: false },
+    });
+  }
+  return status;
+}
+
+async function updateStatus(isInUse: boolean) {
+  let status = await prisma.status.findFirst();
+  if (status) {
+    status = await prisma.status.update({
+      where: { isInUse: status.isInUse },
+      data: { isInUse },
+    });
+  } else {
+    status = await prisma.status.create({
+      data: { isInUse },
+    });
+  }
+  return status;
+}
+
 // Handle GET requests
 export async function GET() {
   try {
-    let status = await prisma.status.findFirst();
-
-    if (!status) {
-      status = await prisma.status.create({
-        data: { isInUse: false },
-      });
-    }
-
+    const status = await getStatus();
     return NextResponse.json(status);
   } catch (error) {
     console.error("Error fetching status:", error);
@@ -38,19 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    let status = await prisma.status.findFirst();
-
-    if (status) {
-      status = await prisma.status.update({
-        where: { isInUse: status.isInUse },
-        data: { isInUse },
-      });
-    } else {
-      status = await prisma.status.create({
-        data: { isInUse },
-      });
-    }
-
+    const status = await updateStatus(isInUse);
     return NextResponse.json(status);
   } catch (error) {
     console.error("Error updating status:", error);

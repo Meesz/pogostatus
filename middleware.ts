@@ -1,31 +1,49 @@
-import { jwtVerify } from "jose";
+import { jwtVerify, JWTPayload } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get("token");
-  let decoded;
+
   if (!token) {
-    return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
+    return redirectToSignIn(req);
   }
 
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET is not defined in environment variables");
-    }
+    const secret = getJwtSecret();
+    const { payload } = await verifyToken(token.value, secret);
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token.value, secret);
-    decoded = payload;
+    // You can use the decoded payload here if needed
+    // For example: req.headers.set("X-User-Id", payload.sub);
 
     return NextResponse.next();
   } catch (err) {
-    // Clear the invalid token
-    const response = NextResponse.redirect(
-      new URL("/signin", req.nextUrl.origin)
-    );
-    response.cookies.delete("token"); // Ensure token is deleted
-    return response;
+    return handleInvalidToken(req);
   }
+}
+
+function getJwtSecret(): Uint8Array {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  return new TextEncoder().encode(jwtSecret);
+}
+
+async function verifyToken(
+  token: string,
+  secret: Uint8Array
+): Promise<{ payload: JWTPayload }> {
+  return await jwtVerify(token, secret);
+}
+
+function redirectToSignIn(req: NextRequest): NextResponse {
+  return NextResponse.redirect(new URL("/signin", req.nextUrl.origin));
+}
+
+function handleInvalidToken(req: NextRequest): NextResponse {
+  const response = redirectToSignIn(req);
+  response.cookies.delete("token");
+  return response;
 }
 
 export const config = {

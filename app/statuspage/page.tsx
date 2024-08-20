@@ -1,27 +1,31 @@
 // app/statuspage/page.tsx
 "use client";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Button from "../../components/Button";
 
 export default function StatusPage() {
   const [isInUse, setIsInUse] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       const response = await fetch("/api/status/");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
       const data = await response.json();
       setIsInUse(data.isInUse);
-      setIsLoading(false);
     } catch (error) {
       console.error("Failed to fetch status:", error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
 
   const toggleStatus = async () => {
     try {
@@ -33,9 +37,10 @@ export default function StatusPage() {
         },
         body: JSON.stringify({ isInUse: newStatus }),
       });
-      if (response.ok) {
-        setIsInUse(newStatus);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
       }
+      setIsInUse(newStatus);
     } catch (error) {
       console.error("Failed to update status:", error);
     }
@@ -61,18 +66,7 @@ export default function StatusPage() {
         </span>
       </p>
       <div className="flex justify-center">
-        <motion.button
-          className={`${
-            isInUse
-              ? "bg-green-500 hover:bg-green-700"
-              : "bg-red-500 hover:bg-red-700"
-          } text-white font-bold py-3 px-6 rounded-lg text-lg sm:text-xl`}
-          onClick={toggleStatus}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isInUse ? "Vrijgeven" : "Bezet zetten"}
-        </motion.button>
+        <Button isInUse={isInUse} toggleStatus={toggleStatus} />
       </div>
       <div className="mt-8 flex justify-center">
         <Image

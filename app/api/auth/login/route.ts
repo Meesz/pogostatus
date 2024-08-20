@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { SignJWT } from "jose"; // Import SignJWT from jose
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (!user) {
-    return new Response(
-      JSON.stringify({ message: "Invalid email or password" }),
+    return NextResponse.json(
+      { message: "Invalid email or password" },
       { status: 401 }
     );
   }
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
   // Check password
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
-    return new Response(
-      JSON.stringify({ message: "Invalid email or password" }),
+    return NextResponse.json(
+      { message: "Invalid email or password" },
       { status: 401 }
     );
   }
@@ -42,10 +42,17 @@ export async function POST(req: NextRequest) {
     .sign(secret);
 
   // Set the cookie with the JWT token
-  return new Response(JSON.stringify({ message: "Login successful" }), {
-    status: 200,
-    headers: {
-      "Set-Cookie": `token=${token}; HttpOnly; Path=/; Max-Age=3600;`,
-    },
+  const response = NextResponse.json(
+    { message: "Login successful" },
+    { status: 200 }
+  );
+  response.cookies.set({
+    name: "token",
+    value: token,
+    httpOnly: true,
+    path: "/",
+    maxAge: 3600,
   });
+
+  return response;
 }
